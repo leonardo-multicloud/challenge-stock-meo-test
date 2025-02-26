@@ -1,0 +1,60 @@
+name: Main Pipeline
+
+on:
+  push:
+    branches: ["*", "**/*"]
+    tags: ["*", "**/*"]
+
+env:
+  PROJECT_ID: fake-app-323017
+  REGION: us
+  GAR_LOCATION: gcr.io/rare-gist-451920-p4/challenge-stock-meo:v1.0
+
+jobs:
+  unit-build:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r api_backend/requirements.txt
+
+      - name: Run tests
+        run: |
+          source venv/bin/activate
+          pytest api_backend/tests/
+  build-push-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+
+      - id: "auth"
+          uses: "google-github-actions/auth@v1"
+          with:
+            credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - name: "Docker auth"
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build image
+        run: docker build . --file DOCKERFILE_LOCATION --tag ${{ env.GAR_LOCATION }}
+        working-directory: WORKING_DIRECTORY
+
+      - name: Push image
+        run: docker push ${{ env.GAR_LOCATION }}
