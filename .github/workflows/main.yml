@@ -35,7 +35,7 @@ jobs:
           source venv/bin/activate
           pytest api_backend/tests/
 
-  build-push-artifact:
+  build-push-artifact-gcp:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -63,3 +63,34 @@ jobs:
 
       - name: Push image
         run: docker push ${{ env.IMAGE_TAG }}
+
+  deploy-cloud-run-gcp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get commit hash
+        run: echo "SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_ENV
+
+      - id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Generate image
+        run: |
+          echo "Generate image"
+          echo "IMAGE_TAG=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ env.SHORT_SHA }}"  >> $IMAGE_CONTAINER
+
+      - id: 'deploy'
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        with:
+          service: 'challenge-meo'
+          image: ${{ env.IMAGE_CONTAINER }}
+
+      - name: 'Use output'
+        run: 'curl "${{ steps.deploy.outputs.url }}"'
