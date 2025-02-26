@@ -56,7 +56,6 @@ jobs:
 
       - name: Build image
         run: docker build -t ${{ env.GAR_LOCATION }} ${{ env.DOCKERFILE_CONTEXT }} --no-cache
-        working-directory: WORKING_DIRECTORY
 
       - name: Push image
         run: docker push ${{ env.GAR_LOCATION }}
