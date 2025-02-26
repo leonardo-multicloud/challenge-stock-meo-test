@@ -6,7 +6,7 @@ on:
     tags: ["*", "**/*"]
 
 env:
-  PROJECT_ID: fake-app-323017
+  PROJECT_ID: rare-gist-451920-p4
   REGION: us
   REGISTRY: gcr.io
   IMAGE_NAME: challenge-stock-meo
