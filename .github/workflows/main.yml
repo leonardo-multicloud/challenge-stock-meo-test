@@ -93,6 +93,7 @@ jobs:
         with:
           service: 'challenge-meo'
           image: ${{ env.IMAGE_TAG }}
-
+          region: europe-west1
+          
       - name: 'Use output'
         run: 'curl "${{ steps.deploy.outputs.url }}"'
