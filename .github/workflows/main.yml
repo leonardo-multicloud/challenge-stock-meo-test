@@ -8,7 +8,8 @@ on:
 env:
   PROJECT_ID: fake-app-323017
   REGION: us
-  GAR_LOCATION: gcr.io/rare-gist-451920-p4/challenge-stock-meo:v1.0
+  REGISTRY: gcr.io
+  IMAGE_NAME: challenge-stock-meo
   DOCKERFILE_LOCATION: ./api_backend/dockerfile
   DOCKERFILE_CONTEXT: ./api_backend
 
@@ -21,8 +22,8 @@ jobs:
       packages: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-        
+        uses: actions/checkout@v3
+
       - name: Install dependencies
         run: |
           python -m venv venv
@@ -33,29 +34,29 @@ jobs:
         run: |
           source venv/bin/activate
           pytest api_backend/tests/
+
   build-push-artifact:
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v3"
-        
-      - id: "auth"
-        uses: "google-github-actions/auth@v1"
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get commit hash
+        run: echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - id: auth
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
 
-      - name: "Set up Cloud SDK"
-        uses: "google-github-actions/setup-gcloud@v1"
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
 
-      - name: "Use gcloud CLI"
-        run: "gcloud info"
+      - name: Use gcloud CLI
+        run: gcloud info
 
-      - name: "Docker auth"
-        run: |-
-          gcloud auth configure-docker gcr.io --quiet
+      - name: Docker auth
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
 
       - name: Build image
-        run: docker build -t ${{ env.GAR_LOCATION }} ${{ env.DOCKERFILE_CONTEXT }} --no-cache
-
-      - name: Push image
-        run: docker push ${{ env.GAR_LOCATION }}
+        run: docker build -t ${{ env.REGISTRY }
