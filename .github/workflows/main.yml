@@ -9,6 +9,8 @@ env:
   PROJECT_ID: fake-app-323017
   REGION: us
   GAR_LOCATION: gcr.io/rare-gist-451920-p4/challenge-stock-meo:v1.0
+  DOCKERFILE_LOCATION: ./api_backend/dockerfile
+  DOCKERFILE_CONTEXT: ./api_backend
 
 jobs:
   unit-build:
@@ -53,7 +55,7 @@ jobs:
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build image
-        run: docker build . --file DOCKERFILE_LOCATION --tag ${{ env.GAR_LOCATION }}
+        run: docker build {{ env.DOCKERFILE_CONTEXT }} --file {{ env.DOCKERFILE_LOCATION }} --tag ${{ env.GAR_LOCATION }}
         working-directory: WORKING_DIRECTORY
 
       - name: Push image
